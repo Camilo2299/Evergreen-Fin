@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Archivo para el despliegue como codigo de la infraestructura de la arquitectura de referencia
+
+Parameters:
+  AppName:
+    Type: String
+    Description: The name of the Amplify application
+    Default: evergreen-app
+Resources:
+  EC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-03a6eaae9938c858c
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref MyVPCSecurityGroup
+      Tags:
+        - Key: Name
+          Value: EC2-Evergreen
+  S3BucketFinancial:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'evergreen-bucket'
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: 'false'
+        BlockPublicPolicy: 'false'
+        IgnorePublicAcls: 'false'
+        RestrictPublicBuckets: 'false'
+  MyDBInstance:
+    DependsOn: MyVPCSecurityGroup
+    Type: AWS::RDS::DBInstance
+    Properties:
+      MasterUsername: egfin
+      MasterUserPassword: egfin123
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: 15.3
+      DBName: mydb
+      DBInstanceIdentifier: my-rds-instance
+      AllocatedStorage: 20
+      VPCSecurityGroups:
+        - !Ref MyVPCSecurityGroup
+      PubliclyAccessible: true
+      StorageEncrypted: true
+      BackupRetentionPeriod: 7
+  MyVPCSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite el acceso a la instancia de RDS
+      VpcId: vpc-009654f518524b58a
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+  MyCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: evergreen-cluster-fin
+  MyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: MyCluster
+    Properties:
+      Cpu: 256
+      Memory: 512
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      TaskRoleArn: arn:aws:iam::667648694495:role/developer
+      ExecutionRoleArn: arn:aws:iam::667648694495:role/developer
+      ContainerDefinitions:
+        - Name: evergreen-container
+          Image: my-account.dkr.ecr.us-east-1.amazonaws.com/my-react-image:latest
+          PortMappings:
+            - ContainerPort: 3000
+  MyService:
+    Type: AWS::ECS::Service
+    DependsOn: MyTaskDefinition
+    Properties:
+      Cluster: !Ref MyCluster
+      TaskDefinition: !Ref MyTaskDefinition
+      DesiredCount: '1'
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref MyVPCSecurityGroup
+          Subnets:
+            - subnet-008719e0b115dd091
+            - subnet-018f49f82bb1f263d
+            - subnet-0b6fcc2a1684d2355
+            - subnet-0c97673c8e1dd92f4
+            - subnet-03e79f8e2013c0a54
+            - subnet-087db6eaec685762d
+    AmplifyApp:
+      Type: AWS::Amplify::App
+      Properties:
+        Name: !Ref AppName
+        AutoDeployBranchName: main

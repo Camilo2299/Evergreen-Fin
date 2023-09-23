@@ -1,0 +1,418 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: arq-avzd-fin-be
+Transform:
+- AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 30
+    Tracing: Active
+  Api:
+    TracingEnabled: true
+Parameters:
+  Project:
+    Description: Project name
+    Type: String
+    Default: arq-avzd-fin-be
+  Stage:
+    Description: API Gateway stage
+    Type: String
+    Default: dev
+  LambdaIAMRole:
+    Description: Lambda IAM Role
+    Type: String
+    Default: arn:aws:iam::667648694495:role/eg-fin-lambda-role
+  SecGroup:
+    Description: Security Group
+    Type: String
+    Default: sg-01310086b54763de7
+  SubnetId01:
+    Description: Subnet Id 01
+    Type: String
+    Default: subnet-008719e0b115dd091
+  SubnetId02:
+    Description: Subnet Id 02
+    Type: String
+    Default: subnet-018f49f82bb1f263d
+Resources:
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+      - nodejs18.x
+      ContentUri: s3://s3bucketevergreen/cec7334de13708779dadbda365bf6588
+      Description: Common layer for project
+      LicenseInfo: MIT
+      RetentionPolicy: Retain
+    Metadata:
+      SamResourceId: CommonLayer
+  FinBeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: Stage
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://s3bucketevergreen/4aebcce6b71853c21313ed14d03aed79
+      Name:
+        Fn::Sub: ${Project}-serverless-api
+    Metadata:
+      SamResourceId: FinBeApi
+  createPaymentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-create-payment
+      Handler: src/create-payment/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        CreatePaymentPost:
+          Type: Api
+          Properties:
+            Path: /v1/payments
+            Method: POST
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: createPaymentFunction
+  createPurchaseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-create-purchase
+      Handler: src/create-purchase/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        CreatePurchasetPost:
+          Type: Api
+          Properties:
+            Path: /v1/purchases
+            Method: POST
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: createPurchaseFunction
+  getFinancialStatementsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-financial-statement
+      Handler: src/get-financial-statements/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/financial/statements
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getFinancialStatementsFunction
+  getCostCentersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-cost-centers
+      Handler: src/get-cost-centers/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/cost-centers
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getCostCentersFunction
+  getCustomersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-customers
+      Handler: src/get-customers/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/customers
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getCustomersFunction
+  getInvoiceDetailsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-invoice-details
+      Handler: src/get-invoice-details/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/invoices/{id}
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getInvoiceDetailsFunction
+  getInvoicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-invoices
+      Handler: src/get-invoices/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/invoices
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getInvoicesFunction
+  getResponsiblesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-responsibles
+      Handler: src/get-responsibles/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/responsibles
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getResponsiblesFunction
+  getResposibleDetailsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-responsible-details
+      Handler: src/get-responsible-details/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/responsibles/{id}
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getResposibleDetailsFunction
+  getProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-products
+      Handler: src/get-products/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/products
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getProductsFunction
+  getProductDetailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${Project}-${Stage}-get-product-details
+      Handler: src/get-product-details/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Description: PLEASE FILL ME!!!!!
+      Role:
+        Ref: LambdaIAMRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecGroup
+        SubnetIds:
+        - Ref: SubnetId01
+        - Ref: SubnetId02
+      Layers:
+      - Ref: CommonLayer
+      Events:
+        FinancialStatementsPost:
+          Type: Api
+          Properties:
+            Path: /v1/products/{id}
+            Method: GET
+            RestApiId:
+              Ref: FinBeApi
+      CodeUri: s3://s3bucketevergreen/b77ff64df03800892d9e266942c81ad2
+    Metadata:
+      SamResourceId: getProductDetailFunction
+Outputs:
+  FinBeApiBaseUrl:
+    Description: URL of created API
+    Value:
+      Fn::Sub: https://${FinBeApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/
